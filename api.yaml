@@ -1,0 +1,849 @@
+openapi: 3.0.1
+info:
+  title: Bybit API
+  description: |+
+    ## REST API for the Bybit Exchange.
+    Base URI: [https://api.bybit.com]
+
+  termsOfService: https://www.bybit.com/app/login
+  contact:
+    email: IT@bybit.com
+  version: 0.0.1
+servers:
+- url: //api.bybit.com/
+tags:
+- name: Order
+  description: Place new order, cancel, replace and get order list
+- name: Positions
+  description: Get account position info
+- name: Wallet
+  description: Get wallet funding records, get withdraw records
+- name: Symbol
+  description: Query Symbols
+- name: LinearOrder
+  description: Place new linear order, cancel, replace and get linear order list
+paths:
+  /v2/private/wallet/balance:
+    get:
+      tags:
+      - Wallet
+      summary: get wallet balance info
+      operationId: Wallet.getBalance
+      parameters:
+      - name: coin
+        in: query
+        description: Coin.enum {BTC,EOS,XRP,ETH,USDT}
+        schema:
+          type: string
+      responses:
+        200:
+          description: Request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletBalanceEnvelope'
+      deprecated: false
+
+  /spot/v1/order:
+    post:
+      tags:
+      - Order
+      summary: Place active order
+      operationId: Order.new
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SpotOrderCreate'
+        description: TCustomized order ID, maximum length at 36 characters, and order
+          ID under the same agency has to be unique.
+        required: false
+      responses:
+        200:
+          description: Request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpotCreateOrderEnvelope'
+      deprecated: false
+    delete:
+      tags:
+      - Order
+      summary: Cancel active order
+      operationId: Order.cancel
+      parameters:
+        - name: order_id
+          in: query
+          schema:
+            type: string
+        - name: order_link_id
+          in: query
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: Request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpotCancelOrderEnvelope'
+      deprecated: false
+    get:
+      tags:
+      - Order
+      summary: Get active order
+      operationId: Order.query
+      parameters:
+        - name: order_id
+          in: query
+          schema:
+            type: string
+        - name: order_link_id
+          in: query
+          schema:
+            type: string
+
+      responses:
+        200:
+          description: Request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpotGetOrderEnvelope'
+      deprecated: false
+
+  /private/linear/order/create:
+    post:
+      tags:
+      - LinearOrder
+      summary: Create Active Order
+      description: This will create linear order
+      operationId: LinearOrder.new
+      requestBody:
+        $ref: '#/components/requestBodies/LinearOrderCreate'
+      responses:
+        200:
+          description: Request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinearCreateOrderEnvelope'
+      deprecated: false
+  /private/linear/order/cancel:
+    post:
+      description: This will cancel linear active order
+      tags:
+        - LinearOrder
+      summary: Cancel Active Order
+      operationId: LinearOrder.cancel
+      requestBody:
+        $ref: '#/components/requestBodies/LinearOrderCancel'
+      responses:
+        200:
+          description: Request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinearCancelOrderEnvelope'
+  /private/linear/order/replace:
+    post:
+      tags:
+      - LinearOrder
+      summary: Replace Active Order
+      operationId: LinearOrder.replace
+      requestBody:
+        $ref: '#/components/requestBodies/LinearOrderReplace'
+      responses:
+        200:
+          description: Request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinearCreateOrderEnvelope'
+      deprecated: false
+
+  /private/linear/position/list:
+    get:
+      tags:
+      - LinearPositions
+      summary: Get my position list.
+      description: This will get my position list.
+      operationId: LinearPositions.myPosition
+      parameters:
+      - name: symbol
+        in: query
+        schema:
+          type: string
+      responses:
+        200:
+          description: Request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinearMyPositionEnvelope'
+      deprecated: false
+
+  /private/linear/position/set-leverage:
+    post:
+      tags:
+      - LinearPositions
+      summary: Set leverage
+      description: This will Set Leverage
+      operationId: LinearPositions.saveLeverage
+      requestBody:
+        $ref: '#/components/requestBodies/LinearSetLeverage'
+      responses:
+        200:
+          description: Request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonRpcEnvelope'
+
+components:
+  requestBodies:
+   LinearOrderCreate:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LinearOrderCreate'
+      required: true
+   LinearOrderCancel:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LinearOrderCancel'
+      required: true
+   LinearOrderReplace:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LinearOrderReplace'
+      required: true
+   LinearSetLeverage:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LinearSetLeverage'
+      required: true
+  
+  schemas:
+    WalletBalanceEnvelope:
+      type: object
+      properties:
+        ret_code:
+          type: integer
+          format: int32
+        ret_msg:
+          type: string
+        ext_code:
+          type: string
+        ext_info:
+          type: string
+        result:
+          type: object
+          additionalProperties:
+              $ref: '#/components/schemas/WalletBalance'
+      description: Get account withdraw balance response
+    WalletBalance:
+      type: object
+      properties:
+        equity:
+          type: number
+          format: double
+        available_balance:
+          type: number
+          format: double
+        used_margin:
+          type: number
+          format: double
+        order_margin:
+          type: number
+          format: double
+        position_margin:
+          type: number
+          format: double
+        occ_closing_fee:
+          type: number
+          format: double
+        occ_funding_fee:
+          type: number
+          format: double
+        wallet_balance:
+          type: number
+          format: double
+        realised_pnl:
+          type: number
+          format: double
+        unrealised_pnl:
+          type: number
+          format: double
+        cum_realised_pnl:
+          type: number
+          format: double
+        given_cash:
+          type: number
+          format: double
+        service_cash:
+          type: number
+          format: double
+      description: Get wallet balance response
+
+
+    SpotOrderCreate:
+      type: object
+      required:
+        - symbol
+        - side
+        - type
+        - time_in_force
+      properties:
+        symbol:
+          type: string
+          example: 'BTC'
+        side:
+          type: string
+          example: 'Buy'
+        type:
+          type: string
+          example: 'Limit'        
+        qty:
+          type: number
+          example: '19.95'        
+        price:
+          type: number
+          example: '100000.50'        
+        time_in_force:
+          $ref: '#/components/schemas/TimeInForceSpot'
+        order_link_id:
+          type: string
+
+    SpotOrderCancel:
+      type: object
+      properties:
+        order_id:
+          type: string
+        order_link_id:
+          type: string
+      
+    LinearOrderCancel:
+      type: object
+      required:
+        - symbol
+      properties:
+        symbol:
+          type: string
+          example: 'BTC'
+        order_id:
+          type: string
+        order_link_id:
+          type: string
+    
+    LinearOrderCreate:
+      type: object
+      required:
+        - symbol
+        - side
+        - time_in_force
+        - order_type
+        - close_on_trigger
+        - reduce_only
+      properties:
+        symbol:
+          type: string
+          example: 'BTC'
+        side:
+          type: string
+          example: 'Buy'
+        qty:
+          type: number
+          example: '19.95'        
+        price:
+          type: number
+          example: '100000.50'        
+        time_in_force:
+          $ref: '#/components/schemas/TimeInForceLinear'
+        order_link_id:
+          type: string
+        order_type:
+          type: string
+          example: 'Limit'        
+        close_on_trigger:
+          type: boolean
+        reduce_only:
+          type: boolean
+        take_profit:
+          type: number
+        stop_loss:
+          type: number
+        tp_trigger_by:
+          type: string
+        sl_trigger_by:
+          type: string
+        position_idx:
+          type: integer
+          minimum: 0
+          maximum: 2
+
+    LinearOrderReplace:
+      type: object
+      required:
+        - symbol
+      properties:
+        order_id:
+          type: string
+        order_link_id:
+          type: string
+        symbol:
+          type: string
+          example: 'BTC'
+        p_r_qty:
+          type: number
+        p_r_price:
+          type: number
+        take_profit:
+          type: number
+        stop_loss:
+          type: number
+        tp_trigger_by:
+          type: string
+        sl_trigger_by:
+          type: string
+
+    LinearSetLeverage:
+      type: object
+      required:
+        - symbol
+        - buy_leverage
+        - sell_leverage
+      properties:
+        symbol:
+          type: string
+          example: 'BTC'
+        buy_leverage:
+          type: integer
+          minimum: 1
+          maximum: 100
+        sell_leverage:
+          type: integer
+          minimum: 1
+          maximum: 100
+          
+    JsonRpcEnvelope:
+      type: object
+      properties:
+        ret_code:
+          type: integer
+          format: int32
+        ret_msg:
+          type: string
+        ext_code:
+          type: string
+        ext_info:
+          type: string
+        time_now:
+          type: string
+
+    SpotCreateOrderEnvelope:
+      type: object
+      properties:
+        ret_code:
+          type: integer
+          format: int32
+        ret_msg:
+          type: string
+        ext_code:
+          type: string
+        ext_info:
+          type: string
+        time_now:
+          type: string
+        result:
+          $ref: '#/components/schemas/SpotCreateOrderResult'
+      description: Create Linear Order Base
+      
+    LinearCreateOrderEnvelope:
+      type: object
+      properties:
+        ret_code:
+          type: integer
+          format: int32
+        ret_msg:
+          type: string
+        ext_code:
+          type: string
+        ext_info:
+          type: string
+        time_now:
+          type: string
+        result:
+          $ref: '#/components/schemas/LinearCreateOrderResult'
+      description: Create Linear Order Base
+
+    SpotCreateOrderResult:
+      type: object
+      properties:
+        orderId:
+          type: string
+        orderLinkId:
+          type: string
+        symbol:
+          type: string
+        transactTime:
+          type: integer
+          format: int64
+        price:
+          type: number
+        origQty:
+          type: number
+        type:
+          type: string
+        side:
+          type: string
+        status:
+          type: string
+        timeInForce:
+          $ref: '#/components/schemas/TimeInForceSpot'
+        accountId:
+          type: integer
+          format: int64
+        symbolName:
+          type: string
+      description: create spot order response
+
+    LinearCreateOrderResult:
+      type: object
+      properties:
+        created_time:
+          type: string
+          format: date-time
+          example: '2022-01-25T09:16:15.038448Z'
+        cum_exec_fee:
+          type: number
+          format: double
+        cum_exec_qty:
+          type: number
+          format: double
+        cum_exec_value:
+          type: number
+          format: double
+        last_exec_price:
+          type: number
+          format: double
+        order_id:
+          type: string
+        order_link_id:
+          type: string
+        order_status:
+          type: string
+        order_type:
+          type: string
+        price:
+          type: number
+          format: double
+        qty:
+          type: number
+          format: double
+        reduce_only:
+          type: boolean
+        side:
+          type: string
+        symbol:
+          type: string
+        time_in_force:
+          $ref: '#/components/schemas/TimeInForceLinear'
+        updated_time:
+          type: string
+          format: date-time
+          example: '2022-01-25T09:16:15.038448Z'
+        user_id:
+          type: integer
+          format: int64
+        take_profit:
+          type: number
+          format: double
+        stop_loss:
+          type: number
+          format: double
+        tp_trigger_by:
+          type: string
+        sl_trigger_by:
+          type: string
+      description: Create Linear Order
+
+    SpotCancelOrderEnvelope:
+      type: object
+      properties:
+        ret_code:
+          type: integer
+          format: int32
+        ret_msg:
+          type: string
+        ext_code:
+          type: string
+        ext_info:
+          type: string
+        time_now:
+          type: string
+        result:
+          $ref: '#/components/schemas/SpotCancelOrderResult'
+      description: Create Linear Order Envelope
+      
+    SpotCancelOrderResult:
+      type: object
+      properties:
+        order_id:
+          type: string
+      description: Create Linear Order
+
+    SpotGetOrderEnvelope:
+      type: object
+      properties:
+        ret_code:
+          type: integer
+          format: int32
+        ret_msg:
+          type: string
+        ext_code:
+          type: string
+        ext_info:
+          type: string
+        time_now:
+          type: string
+        result:
+          $ref: '#/components/schemas/SpotGetOrderResult'
+      description: Create Linear Order Envelope
+      
+    SpotGetOrderResult:
+      type: object
+      properties:
+        accountId:
+          type: integer
+          format: int64
+        exchangeId:
+          type: integer
+        orderId:
+          type: integer
+          format: int64
+        orderLinkId:
+          type: string
+        symbol:
+          type: string
+        transactTime:
+          type: integer
+          format: int64
+        price:
+          type: number
+        origQty:
+          type: number
+        executedQty:
+          type: number
+        cummulativeQuoteQty:
+          type: number
+        avgPrice:
+          type: number
+        stopPrice:
+          type: number
+        icebergQty:
+          type: number
+        type:
+          type: string
+        side:
+          type: string
+        status:
+          type: string
+        timeInForce:
+          $ref: '#/components/schemas/TimeInForceSpot'
+        symbolName:
+          type: string
+        time:
+          type: integer
+          format: int64
+        updateTime:
+          type: integer
+          format: int64
+        isWorking:
+          type: boolean
+      description: get spot order response
+
+    LinearCancelOrderEnvelope:
+      type: object
+      properties:
+        ret_code:
+          type: integer
+          format: int32
+        ret_msg:
+          type: string
+        ext_code:
+          type: string
+        ext_info:
+          type: string
+        time_now:
+          type: string
+        result:
+          $ref: '#/components/schemas/LinearCancelOrderResult'
+      description: Create Linear Order Envelope
+      
+    LinearCancelOrderResult:
+      type: object
+      properties:
+        order_id:
+          type: string
+      description: Cancel Linear Order Result
+      
+    LinearMyPositionEnvelope:
+      type: object
+      properties:
+        ret_code:
+          type: integer
+          format: int32
+        ret_msg:
+          type: string
+        ext_code:
+          type: string
+        ext_info:
+          type: string
+        time_now:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/LinearMyPositionResult'
+      description: Linear My position Envelope
+
+    LinearMyPositionResult:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          format: int32
+        symbol:
+          type: string
+        side:
+          type: string
+          example: 'Buy'
+        size:
+          type: number
+        position_value:
+          type: number
+        entry_price:
+          type: number
+        liq_price:
+          type: number
+        bust_price:
+          type: number
+        leverage:
+          type: integer
+          format: int32
+        auto_add_margin:
+          type: number
+        is_isolated:
+          type: boolean
+        position_margin:
+          type: number
+        occ_closing_fee:
+          type: number
+        realised_pnl:
+          type: number
+        cum_realised_pnl:
+          type: number
+        free_qty:
+          type: number
+        tp_sl_mode:
+          type: string
+        deleverage_indicator:
+          type: integer
+          format: int32
+        unrealised_pnl:
+          type: number
+        risk_id:
+          type: integer
+          format: int32
+        take_profit:
+          type: number
+        stop_loss:
+          type: number
+        trailing_stop:
+          type: number
+        position_idx:
+          type: integer
+          format: int32
+
+      description: Linear my position result
+
+    ExecutionEventEnvelope:
+      type: object
+      properties:
+        topic:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExecutionEvent'
+      description: Execution Event Envelope
+    
+    ExecutionEvent:
+      type: object
+      properties:
+        symbol:
+          type: string
+          example: 'BTC'
+        side:
+          type: string
+          example: 'Buy'
+        order_id:
+          type: string
+        exec_id:
+          type: string
+        order_link_id:
+          type: string
+        price:
+          type: number
+          example: '100000.50'        
+        order_qty:
+          type: number
+          example: '19.95'        
+        exec_type:
+          type: string
+        exec_qty:
+          type: number
+          example: '19.95'        
+        exec_fee:
+          type: number
+          example: '19.95'        
+        leaves_qty:
+          type: number
+          example: '19.95'        
+        is_maker:
+          type: boolean
+        trade_time:
+          type: string
+          format: date-time
+          example: '2022-01-25T09:16:15.038448Z'
+          
+
+    TimeInForceSpot:
+      type: string
+      enum:
+        - GTC
+        - FOC
+        - IOC
+      description: >
+        Time In Force:
+         * GTC - Good till cancelled
+         * FOC - Fill or Kill 
+         * IOC - Immediate or Cancel
+
+    TimeInForceLinear:
+      type: string
+      enum:
+        - GoodTillCancel
+        - ImmediateOrCancel
+        - FillOrKill
+        - PostOnly
+      description: >
+        Time In Force:
+         * GTC - Good till cancelled
+         * FOC - Fill or Kill 
+         * IOC - Immediate or Cancel
