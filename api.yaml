@@ -119,7 +119,7 @@ paths:
       - LinearOrder
       summary: Create Active Order
       description: This will create linear order
-      operationId: LinearOrder.new
+      operationId: Order.new
       requestBody:
         $ref: '#/components/requestBodies/LinearOrderCreate'
       responses:
@@ -136,7 +136,7 @@ paths:
       tags:
         - LinearOrder
       summary: Cancel Active Order
-      operationId: LinearOrder.cancel
+      operationId: Order.cancel
       requestBody:
         $ref: '#/components/requestBodies/LinearOrderCancel'
       responses:
@@ -151,7 +151,7 @@ paths:
       tags:
       - LinearOrder
       summary: Replace Active Order
-      operationId: LinearOrder.replace
+      operationId: Order.replace
       requestBody:
         $ref: '#/components/requestBodies/LinearOrderReplace'
       responses:
@@ -161,6 +161,56 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LinearCreateOrderEnvelope'
+      deprecated: false
+
+  /private/linear/stop-order/create:
+    post:
+      tags:
+      - LinearOrder
+      summary: Create Active Order
+      description: This will create linear Conditional order
+      operationId: ConditionalOrder.new
+      requestBody:
+        $ref: '#/components/requestBodies/LinearConditionalOrderCreate'
+      responses:
+        200:
+          description: Request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinearCreateConditionalOrderEnvelope'
+      deprecated: false
+  /private/linear/stop-order/cancel:
+    post:
+      description: This will cancel linear Conditional order
+      tags:
+        - LinearOrder
+      summary: Cancel Active Order
+      operationId: ConditionalOrder.cancel
+      requestBody:
+        $ref: '#/components/requestBodies/LinearConditionalOrderCancel'
+      responses:
+        200:
+          description: Request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinearCancelConditionalOrderEnvelope'
+  /private/linear/stop-order/replace:
+    post:
+      tags:
+      - LinearOrder
+      summary: Replace Active Order
+      operationId: ConditionalOrder.replace
+      requestBody:
+        $ref: '#/components/requestBodies/LinearConditionalOrderReplace'
+      responses:
+        200:
+          description: Request was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinearConditionalCreateOrderEnvelope'
       deprecated: false
 
   /private/linear/position/list:
@@ -220,6 +270,24 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/LinearOrderReplace'
+      required: true
+   LinearConditionalOrderCreate:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LinearConditionalOrderCreate'
+      required: true
+   LinearConditionalOrderCancel:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LinearConditionalOrderCancel'
+      required: true
+   LinearConditionalOrderReplace:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LinearConditionalOrderReplace'
       required: true
    LinearSetLeverage:
       content:
@@ -340,6 +408,19 @@ components:
         order_link_id:
           type: string
     
+    LinearConditionalOrderCancel:
+      type: object
+      required:
+        - symbol
+      properties:
+        symbol:
+          type: string
+          example: 'BTC'
+        stop_order_id:
+          type: string
+        order_link_id:
+          type: string
+
     LinearOrderCreate:
       type: object
       required:
@@ -386,6 +467,63 @@ components:
           minimum: 0
           maximum: 2
 
+    LinearConditionalOrderCreate:
+      type: object
+      required:
+        - symbol
+        - side
+        - base_price
+        - stop_px
+        - time_in_force
+        - order_type
+        - trigger_by
+        - close_on_trigger
+        - reduce_only
+      properties:
+        symbol:
+          type: string
+          example: 'BTC'
+        side:
+          type: string
+          example: 'Buy'
+        qty:
+          type: number
+          example: '19.95'
+        base_price:
+          type: number
+          example: '100000.50'
+        price:
+          type: number
+          example: '100000.50'
+        stop_px:
+          type: number
+          example: '100000.50'
+        time_in_force:
+          $ref: '#/components/schemas/TimeInForceLinear'
+        order_link_id:
+          type: string
+        order_type:
+          type: string
+          example: 'Limit'
+        close_on_trigger:
+          type: boolean
+        reduce_only:
+          type: boolean
+        take_profit:
+          type: number
+        stop_loss:
+          type: number
+        trigger_by:
+          type: string
+        tp_trigger_by:
+          type: string
+        sl_trigger_by:
+          type: string
+        position_idx:
+          type: integer
+          minimum: 0
+          maximum: 2
+
     LinearOrderReplace:
       type: object
       required:
@@ -401,6 +539,33 @@ components:
         p_r_qty:
           type: number
         p_r_price:
+          type: number
+        take_profit:
+          type: number
+        stop_loss:
+          type: number
+        tp_trigger_by:
+          type: string
+        sl_trigger_by:
+          type: string
+
+    LinearConditionalOrderReplace:
+      type: object
+      required:
+        - symbol
+      properties:
+        stop_order_id:
+          type: string
+        order_link_id:
+          type: string
+        symbol:
+          type: string
+          example: 'BTC'
+        p_r_qty:
+          type: number
+        p_r_price:
+          type: number
+        p_r_trigger_price:
           type: number
         take_profit:
           type: number
@@ -479,6 +644,24 @@ components:
           type: string
         result:
           $ref: '#/components/schemas/LinearCreateOrderResult'
+      description: Create Linear Order Base
+
+    LinearCreateConditionalOrderEnvelope:
+      type: object
+      properties:
+        ret_code:
+          type: integer
+          format: int32
+        ret_msg:
+          type: string
+        ext_code:
+          type: string
+        ext_info:
+          type: string
+        time_now:
+          type: string
+        result:
+          $ref: '#/components/schemas/LinearCreateConditionalOrderResult'
       description: Create Linear Order Base
 
     SpotCreateOrderResult:
@@ -571,6 +754,66 @@ components:
         sl_trigger_by:
           type: string
       description: Create Linear Order
+
+    LinearCreateConditionalOrderResult:
+      type: object
+      properties:
+        created_time:
+          type: string
+          format: date-time
+          example: '2022-01-25T09:16:15.038448Z'
+        cum_exec_fee:
+          type: number
+          format: double
+        cum_exec_qty:
+          type: number
+          format: double
+        cum_exec_value:
+          type: number
+          format: double
+        last_exec_price:
+          type: number
+          format: double
+        stop_order_id:
+          type: string
+        order_link_id:
+          type: string
+        order_status:
+          type: string
+        order_type:
+          type: string
+        price:
+          type: number
+          format: double
+        qty:
+          type: number
+          format: double
+        reduce_only:
+          type: boolean
+        side:
+          type: string
+        symbol:
+          type: string
+        time_in_force:
+          $ref: '#/components/schemas/TimeInForceLinear'
+        updated_time:
+          type: string
+          format: date-time
+          example: '2022-01-25T09:16:15.038448Z'
+        user_id:
+          type: integer
+          format: int64
+        take_profit:
+          type: number
+          format: double
+        stop_loss:
+          type: number
+          format: double
+        tp_trigger_by:
+          type: string
+        sl_trigger_by:
+          type: string
+      description: Create Linear Conditional Order
 
     SpotCancelOrderEnvelope:
       type: object
@@ -692,6 +935,31 @@ components:
           type: string
       description: Cancel Linear Order Result
       
+    LinearCancelConditionalOrderEnvelope:
+      type: object
+      properties:
+        ret_code:
+          type: integer
+          format: int32
+        ret_msg:
+          type: string
+        ext_code:
+          type: string
+        ext_info:
+          type: string
+        time_now:
+          type: string
+        result:
+          $ref: '#/components/schemas/LinearCancelConditionalOrderResult'
+      description: Create Linear Conditional Order Envelope
+
+    LinearCancelConditionalOrderResult:
+      type: object
+      properties:
+        order_id:
+          type: string
+      description: Cancel Linear Conditional Order Result
+
     LinearMyPositionEnvelope:
       type: object
       properties:
